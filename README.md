@@ -1,54 +1,81 @@
 # Vaccine Management Information System (VMIS)
 
-A comprehensive full-stack web application for managing child vaccination schedules and records, built with **Spring Boot** and **React.js**.
+A comprehensive full-stack web application for managing child vaccination schedules and records.
 
-## 🚀 Features
+## 🎯 Purpose
 
-### Authentication (Full)
-- 🔐 Secure registration and login
-- JWT-based authentication
-- Role-based access control (Admin/Nurse)
-- Password hashing with BCrypt
-
-### Baby Management
-- 👶 Register, view, edit, and delete baby records
-- Search babies by name or phone number
-- Fields: Name, Date of Birth, Gender, Guardian Name, Phone Number
-
-### Vaccination Tracking
-- 💉 Record vaccines given to babies
-- View vaccination history per baby
-- Fields: Vaccine Name, Date Given, Next Due Date
-
-### Schedule Awareness
-- 📅 Show upcoming vaccines based on due dates
-- Highlight overdue vaccines
-- Display completed vs pending vaccines
-
-### Dashboard
-- 📊 Overview of all babies and vaccination status
-- Quick stats: Total babies, vaccines given, overdue cases
+VMIS helps clinics and healthcare workers track babies and ensure they receive vaccines on time. The system provides a simple, efficient way to manage vaccination records, track upcoming doses, and identify overdue cases.
 
 ---
 
-## 🛠 Technology Stack
+## ✨ Features
 
-### Backend
-- **Java 17**
-- **Spring Boot 3.x**
-- **Spring Security** with JWT authentication
-- **Spring Data JPA** with Hibernate
-- **SQLite** database (easy switch to MySQL/PostgreSQL)
-- **Maven** build tool
-- **Lombok** for boilerplate reduction
+### Authentication & Access Control
+- Secure JWT-based authentication
+- Role-based access: Admin and Nurse roles
+- Automatic user creation with default credentials
 
-### Frontend
-- **React 19** + **TypeScript 5.9**
-- **Vite 8** build tool
-- **Tailwind CSS 4.2** with **shadcn/ui** (Radix + Nova preset)
-- **Lucide React** for icons
-- **Sonner** for toast notifications
-- **pnpm** package manager
+### Baby Management
+- Register new babies with complete profiles
+- View, edit, and delete baby records
+- Search babies by name or phone number
+- Track guardian contact information
+
+### Vaccination Tracking
+- Record vaccines administered to each baby
+- Track vaccination history per baby
+- Set and monitor next due dates
+- Identify overdue vaccinations automatically
+
+### Dashboard & Analytics
+- Real-time statistics overview
+- Total registered babies
+- Vaccines administered count
+- Overdue cases alert
+- Monthly registration and vaccination reports
+
+---
+
+## 🏗️ Architecture
+
+### Backend (Spring Boot)
+The backend follows a layered architecture pattern:
+
+```
+com.vmis/
+├── controller/      # REST API endpoints
+├── service/         # Business logic
+├── repository/      # Data access layer
+├── model/           # Entity definitions
+├── dto/             # Data transfer objects
+├── security/        # JWT authentication
+├── config/          # Application configuration
+└── exception/       # Global exception handling
+```
+
+**Key Design Decisions:**
+- **Stateless Authentication**: JWT tokens for secure API access
+- **Role-Based Access**: Different permissions for Admin vs Nurse
+- **RESTful API**: Clean, predictable endpoint structure
+- **H2 Database**: In-memory for development, easily switchable to MySQL/PostgreSQL
+
+### Frontend (React + TypeScript)
+Single Page Application with routing:
+
+```
+src/
+├── pages/           # Route components
+├── components/      # UI components
+├── services/        # API integrations
+├── contexts/        # React context providers
+├── types/           # TypeScript definitions
+└── lib/             # Utilities
+```
+
+**Key Design Decisions:**
+- **Context-Based Auth**: Token stored in localStorage
+- **Axios Interceptors**: Automatic token attachment and 401 handling
+- ** SPA Routing**: Protected dashboard routes behind login
 
 ---
 
@@ -56,303 +83,140 @@ A comprehensive full-stack web application for managing child vaccination schedu
 
 ```
 vmis/
-├── backend/
+├── backend/                    # Spring Boot API
 │   ├── src/main/java/com/vmis/
-│   │   ├── controller/       # REST API controllers
-│   │   ├── service/          # Business logic
-│   │   ├── repository/       # Data access
-│   │   ├── model/            # Entity classes
-│   │   ├── dto/              # Data transfer objects
-│   │   ├── security/         # JWT & auth config
-│   │   ├── config/           # App configuration
-│   │   └── exception/        # Custom exceptions
-│   ├── src/main/resources/
-│   │   └── application.properties
-│   ├── pom.xml
-│   └── Dockerfile
-├── frontend/
+│   │   ├── controller/         # REST endpoints
+│   │   ├── service/            # Business logic
+│   │   ├── repository/         # JPA repositories
+│   │   ├── model/              # Entity classes
+│   │   ├── dto/                # Request/Response DTOs
+│   │   ├── security/           # JWT components
+│   │   └── config/             # App configuration
+│   └── src/main/resources/
+│       └── application.properties
+├── frontend/                   # React SPA
 │   ├── src/
-│   │   ├── components/       # Reusable UI components
-│   │   │   ├── ui/           # shadcn/ui components
-│   │   │   ├── layout/       # Layout components
-│   │   │   └── common/       # Common components
-│   │   ├── pages/            # Page components
-│   │   │   ├── auth/         # Login, Register
-│   │   │   ├── babies/       # Baby management
-│   │   │   ├── vaccines/     # Vaccine records
-│   │   │   └── dashboard/    # Dashboard
-│   │   ├── services/         # API service functions
-│   │   ├── hooks/            # Custom React hooks
-│   │   ├── contexts/         # React contexts
-│   │   ├── types/            # TypeScript types
-│   │   └── lib/              # Utilities
-│   ├── package.json
-│   └── vite.config.ts
-├── docs/
-│   ├── ERD_DIAGRAM.dbml
-│   └── API_DOCUMENTATION.md
-├── docker-compose.yml
+│   │   ├── pages/             # Page components
+│   │   ├── components/         # UI components
+│   │   ├── services/           # API client functions
+│   │   ├── contexts/           # React contexts
+│   │   └── types/              # TypeScript interfaces
+│   └── package.json
+├── run.sh                      # Linux/Mac runner
+├── run.ps1                     # Windows runner
 └── README.md
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
+### Run the Application
 
-| Tool | Version | Installation |
-|------|---------|--------------|
-| Java | 17+ | `sudo apt install openjdk-17-jdk` (Linux) / Download from Oracle |
-| Node.js | 20+ | `nvm install 20` |
-| pnpm | latest | `npm install -g pnpm` |
-| Maven | 3.6+ | `sudo apt install maven` (Linux) |
-
-### Backend Setup
-
-1. Navigate to backend directory:
 ```bash
+# Linux/Mac
+./run.sh dev
+
+# Windows PowerShell
+.\run.ps1 dev
+```
+
+Or manually:
+
+```bash
+# Backend
 cd backend
-```
+mvn spring-boot:run
 
-2. Run the Spring Boot application (uses Maven Wrapper):
-```bash
-./mvnw spring-boot:run
-```
-
-The backend will start at `http://localhost:8080`
-
-> **Note:** Database is auto-created as `vmis.db` in the backend folder. No manual setup needed.
-
-### Frontend Setup
-
-1. Navigate to frontend directory:
-```bash
+# Frontend (new terminal)
 cd frontend
-```
-
-2. Install dependencies:
-```bash
 pnpm install
-```
-
-3. Start the development server:
-```bash
 pnpm dev
 ```
 
-The frontend will start at `http://localhost:5173`
+### Access the App
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8080/api |
+| Health | http://localhost:8080/api/health |
+
+### Default Login
+
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | admin | admin123 |
+| Nurse | nurse | nurse123 |
 
 ---
 
-## 👤 Default Users
-
-### Admin Account
-- **Username:** `admin`
-- **Password:** `admin123`
-- **Role:** ROLE_ADMIN
-
-### Nurse Account
-- **Username:** `nurse`
-- **Password:** `nurse123`
-- **Role:** ROLE_NURSE
-
-Or register a new account through the signup page.
-
----
-
-## 📱 Key Pages
-
-### Public
-- `/login` - Login page
-- `/register` - Registration page
-
-### Protected (Requires Login)
-- `/dashboard` - Main dashboard with stats
-- `/babies` - List and manage babies
-- `/babies/new` - Add new baby
-- `/babies/:id` - Baby profile & vaccination history
-- `/babies/:id/edit` - Edit baby details
-- `/vaccines/:babyId/new` - Record new vaccine
-
----
-
-## 🔒 API Endpoints
+## 🔗 API Endpoints
 
 ### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register new user |
-| POST | `/api/auth/login` | Login and get JWT |
-| GET | `/api/auth/me` | Get current user info |
+```
+POST   /api/auth/register    - Register new user
+POST   /api/auth/login       - Login (returns JWT)
+GET    /api/auth/me          - Get current user
+```
 
 ### Babies
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/babies` | List all babies |
-| POST | `/api/babies` | Create new baby |
-| GET | `/api/babies/:id` | Get baby by ID |
-| PUT | `/api/babies/:id` | Update baby |
-| DELETE | `/api/babies/:id` | Delete baby |
-| GET | `/api/babies/search?q=name` | Search babies |
+```
+GET    /api/babies                    - List all babies
+POST   /api/babies                    - Create new baby
+GET    /api/babies/:id                - Get baby details
+PUT    /api/babies/:id                - Update baby
+DELETE /api/babies/:id                - Delete baby
+GET    /api/babies/search?q=query     - Search babies
+```
 
 ### Vaccines
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/babies/:babyId/vaccines` | List vaccines for baby |
-| POST | `/api/babies/:babyId/vaccines` | Record new vaccine |
-| PUT | `/api/vaccines/:id` | Update vaccine record |
-| DELETE | `/api/vaccines/:id` | Delete vaccine record |
+```
+GET    /api/babies/:id/vaccines       - List baby's vaccines
+POST   /api/babies/:id/vaccines       - Record new vaccine
+PUT    /api/vaccines/:id              - Update vaccine record
+DELETE /api/vaccines/:id              - Delete vaccine record
+```
 
 ### Dashboard
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/dashboard/stats` | Get dashboard statistics |
+```
+GET    /api/dashboard/stats           - Get statistics
+```
 
 ---
 
-## 🗄️ Database Model
+## 📊 Database Schema
 
 ### User
-```
-id (Long)
-username (String)
-email (String)
-password (String)
-role (Enum: ADMIN, NURSE)
-createdAt (Timestamp)
-```
+- id, username, email, password, fullName, roles
 
 ### Baby
-```
-id (Long)
-name (String)
-dateOfBirth (LocalDate)
-gender (Enum: MALE, FEMALE)
-guardianName (String)
-phoneNumber (String)
-createdAt (Timestamp)
-updatedAt (Timestamp)
-```
+- id, name, dateOfBirth, gender, guardianName, phoneNumber, address, notes
 
 ### VaccineRecord
-```
-id (Long)
-babyId (Long)
-vaccineName (String)
-dateGiven (LocalDate)
-nextDueDate (LocalDate)
-notes (String)
-createdAt (Timestamp)
-```
+- id, babyId, vaccineName, dateGiven, nextDueDate, batchNumber, notes, administeredBy
 
 ---
 
-## 🔧 Configuration
+## 🔄 Switching Databases
 
-### Environment Variables (Optional)
+The app uses H2 in-memory database by default. To use MySQL:
 
-The application works with defaults, but you can customize:
-
-```bash
-# Backend (.env in backend folder)
-SERVER_PORT=8080
-DB_URL=jdbc:sqlite:vmis.db
-JWT_SECRET=your-secret-key-min-32-chars
-
-# Frontend (.env in frontend folder)
-VITE_API_URL=http://localhost:8080/api
-```
-
-### Switching to MySQL/PostgreSQL
-
-1. Add dependency in `pom.xml`:
-```xml
-<!-- For MySQL -->
-<dependency>
-    <groupId>com.mysql</groupId>
-    <artifactId>mysql-connector-j</artifactId>
-    <scope>runtime</scope>
-</dependency>
-```
-
+1. Add MySQL connector to `pom.xml`
 2. Update `application.properties`:
 ```properties
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.datasource.url=jdbc:mysql://localhost:3306/vmis
 spring.datasource.username=root
 spring.datasource.password=yourpassword
-spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 ```
 
 ---
 
 ## 🐳 Docker Deployment
 
-Build and run with Docker Compose:
-
 ```bash
 docker-compose up --build
 ```
-
-The backend runs on port 8080, frontend on port 80.
-
----
-
-## 💡 Project Highlights
-
-- **Easy Database Switch**: SQLite for dev, MySQL/PostgreSQL for prod
-- **JWT Authentication**: Secure, stateless auth
-- **Role-based Access**: Admin manages users, Nurses manage records
-- **Real-time Schedule Tracking**: Never miss a vaccine dose
-- **Clean Architecture**: Controller → Service → Repository pattern
-- **Modern UI**: React with shadcn/ui components
-
----
-
-## 🎨 Frontend Template Details
-
-The frontend uses a modern Vite + React + TypeScript setup with shadcn/ui component library.
-
-### shadcn/ui Configuration
-
-- **Style:** Radix
-- **Preset:** Nova (Lucide icons, Geist font)
-- **Base Color:** Neutral
-- **CSS Variables:** Enabled
-- **RTL:** Disabled
-
-### Installed Components (38)
-
-| Category | Components |
-|----------|------------|
-| **Layout** | card, sheet, dialog, drawer, separator, aspect-ratio |
-| **Forms** | button, input, label, textarea, select, checkbox, radio-group, switch, slider |
-| **Navigation** | breadcrumb, navigation-menu, pagination, tabs |
-| **Data Display** | table, badge, avatar, skeleton, progress, alert |
-| **Overlays** | alert-dialog, dropdown-menu, context-menu, popover, hover-card, tooltip |
-| **Feedback** | sonner (toast) |
-| **Other** | calendar, collapsible, menubar, resizable, scroll-area, toggle, toggle-group |
-
-### Adding New Components
-
-```bash
-cd frontend
-pnpm dlx shadcn@latest add [component-name]
-```
-
-### Key Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| react | 19.2.4 | UI library |
-| vite | 8.0.3 | Build tool |
-| tailwindcss | 4.2.2 | CSS framework |
-| radix-ui | 1.4.3 | Headless UI primitives |
-| lucide-react | 1.7.0 | Icons |
-| sonner | 2.0.7 | Toast notifications |
-| date-fns | 4.1.0 | Date utilities |
-| cmdk | 1.1.1 | Command palette |
 
 ---
 
@@ -362,4 +226,4 @@ MIT License
 
 ---
 
-Built with ❤️ for healthcare workers tracking child vaccinations
+Built with ❤️ for healthcare workers
