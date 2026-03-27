@@ -114,7 +114,7 @@ export function LandingPage() {
 
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2024 VMIS. All rights reserved.</p>
+          <p>&copy; 2026 VMIS. All rights reserved.</p>
         </div>
       </footer>
     </div>
