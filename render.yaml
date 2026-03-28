@@ -2,7 +2,7 @@ services:
   backend:
     type: backend
     build:
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile.backend
     env:
       - SERVER_PORT=8080
       - JWT_SECRET=vmis-secret-key-change-this-in-production-minimum-32-chars
@@ -19,9 +19,7 @@ services:
   frontend:
     type: frontend
     build:
-      dockerfile: frontend/Dockerfile
-      args:
-        - VITE_API_URL=$API_URL
+      dockerfile: Dockerfile.frontend
     env:
       - VITE_API_URL=$API_URL
     autoDeploy: true
