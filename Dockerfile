@@ -12,6 +12,9 @@ RUN npm install -g pnpm
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install
 COPY frontend/ .
+
+# Build with relative API URL for single-server deployment
+ENV VITE_API_URL=/api
 RUN pnpm build
 
 # Final Image
