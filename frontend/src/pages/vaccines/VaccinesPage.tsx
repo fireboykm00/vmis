@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { babyService } from "@/services/babyService";
 import { vaccineService } from "@/services/vaccineService";
 import type { Baby, VaccineRecord, VaccineRequest } from "@/types";
@@ -34,8 +34,6 @@ import {
   RefreshCw,
   Loader2,
   Plus,
-  Edit2,
-  Trash2,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -119,21 +117,6 @@ export function VaccinesPage() {
       }
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleDeleteVaccine = async (id: number) => {
-    if (!confirm("Delete this vaccine record?")) return;
-    try {
-      await vaccineService.delete(id);
-      toast.success("Vaccine deleted");
-      loadData();
-    } catch (err) {
-      if (axios.isAxiosError(err) && !err.response) {
-        toast.error("Cannot connect to server");
-      } else {
-        toast.error("Failed to delete");
-      }
     }
   };
 
@@ -268,7 +251,7 @@ export function VaccinesPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Link to={`/babies/${v.babyId}`}>
-                        <Button variant="ghost" size="sm" className="text-blue-600 hover:underline mr-2">
+                        <Button variant="ghost" size="sm" className="text-blue-600 hover:underline">
                           View Baby
                         </Button>
                       </Link>
