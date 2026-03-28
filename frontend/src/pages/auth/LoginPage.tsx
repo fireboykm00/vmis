@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import axios from "axios";
 
 export function LoginPage() {
   const [username, setUsername] = useState("");
@@ -22,8 +24,17 @@ export function LoginPage() {
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { error?: string } } };
-      toast.error(err.response?.data?.error || "Invalid credentials");
+      if (axios.isAxiosError(error)) {
+        if (!error.response) {
+          toast.error("Cannot connect to server. Please ensure the backend is running.");
+        } else if (error.response?.status === 401) {
+          toast.error("Invalid username or password");
+        } else {
+          toast.error("An error occurred. Please try again.");
+        }
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +72,14 @@ export function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

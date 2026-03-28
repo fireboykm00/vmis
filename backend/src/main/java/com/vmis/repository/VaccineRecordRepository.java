@@ -11,7 +11,8 @@ import java.util.List;
 
 @Repository
 public interface VaccineRecordRepository extends JpaRepository<VaccineRecord, Long> {
-    List<VaccineRecord> findByBabyIdOrderByDateGivenDesc(Long babyId);
+    @Query("SELECT v FROM VaccineRecord v JOIN FETCH v.baby WHERE v.baby.id = :babyId ORDER BY v.dateGiven DESC")
+    List<VaccineRecord> findByBabyIdOrderByDateGivenDesc(@Param("babyId") Long babyId);
 
     @Query("SELECT v FROM VaccineRecord v WHERE v.nextDueDate IS NOT NULL AND v.nextDueDate < :today")
     List<VaccineRecord> findOverdueVaccines(@Param("today") LocalDate today);

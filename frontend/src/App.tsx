@@ -8,6 +8,7 @@ import { DashboardPage } from "@/pages/dashboard/DashboardPage";
 import { BabiesPage } from "@/pages/babies/BabiesPage";
 import { BabyFormPage } from "@/pages/babies/BabyFormPage";
 import { BabyProfilePage } from "@/pages/babies/BabyProfilePage";
+import { VaccinesPage } from "@/pages/vaccines/VaccinesPage";
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -30,14 +31,8 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <PublicRoute>
-            <LandingPage />
-          </PublicRoute>
-        }
-      />
+      <Route path="/" element={<LandingPage />} />
+      
       <Route
         path="/login"
         element={
@@ -61,6 +56,7 @@ function AppRoutes() {
         <Route path="/babies/new" element={<BabyFormPage />} />
         <Route path="/babies/:id" element={<BabyProfilePage />} />
         <Route path="/babies/:id/edit" element={<BabyFormPage />} />
+        <Route path="/vaccines" element={<VaccinesPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

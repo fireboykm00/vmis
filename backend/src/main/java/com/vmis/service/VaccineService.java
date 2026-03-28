@@ -20,12 +20,15 @@ public class VaccineService {
     private final VaccineRecordRepository vaccineRecordRepository;
     private final BabyRepository babyRepository;
 
+    @Transactional(readOnly = true)
     public List<VaccineResponse> getVaccinesByBabyId(Long babyId) {
-        if (!babyRepository.existsById(babyId)) {
-            throw new ResourceNotFoundException("Baby not found with id: " + babyId);
-        }
-        return vaccineRecordRepository.findByBabyIdOrderByDateGivenDesc(babyId).stream()
-                .map(VaccineResponse::fromEntity)
+        Baby baby = babyRepository.findById(babyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Baby not found with id: " + babyId));
+        
+        List<VaccineRecord> records = vaccineRecordRepository.findByBabyIdOrderByDateGivenDesc(babyId);
+        
+        return records.stream()
+                .map(v -> VaccineResponse.fromEntity(v))
                 .toList();
     }
 

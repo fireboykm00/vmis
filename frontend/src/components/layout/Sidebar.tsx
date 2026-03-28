@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/babies", label: "Babies", icon: Baby },
+  { href: "/vaccines", label: "Vaccines", icon: Syringe },
 ];
 
 export function Sidebar() {
@@ -114,8 +115,8 @@ export function Sidebar() {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-full flex-col">
-          <div className="lg:hidden flex justify-end p-2">
+        <div className="flex h-full flex-col relative">
+          <div className="lg:hidden flex justify-end p-2 absolute right-0 top-2">
             <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)}>
               <X className="h-5 w-5" />
             </Button>

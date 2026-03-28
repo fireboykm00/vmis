@@ -3,12 +3,14 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { babyService } from "@/services/babyService";
 import { vaccineService } from "@/services/vaccineService";
 import type { Baby, VaccineRecord, VaccineRequest } from "@/types";
+import { getVaccineOptions } from "@/lib/vaccines";
 import { Baby as BabyIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -34,6 +36,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import axios from "axios";
 
 export function BabyProfilePage() {
   const { id } = useParams();
@@ -42,6 +45,10 @@ export function BabyProfilePage() {
   const [vaccines, setVaccines] = useState<VaccineRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingVaccine, setEditingVaccine] = useState<VaccineRecord | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState<number | null>(null);
+
   const [vaccineForm, setVaccineForm] = useState<VaccineRequest>({
     vaccineName: "",
     dateGiven: "",
@@ -50,6 +57,17 @@ export function BabyProfilePage() {
     notes: "",
     administeredBy: "",
   });
+
+  const [editForm, setEditForm] = useState<VaccineRequest>({
+    vaccineName: "",
+    dateGiven: "",
+    nextDueDate: "",
+    batchNumber: "",
+    notes: "",
+    administeredBy: "",
+  });
+
+  const vaccineOptions = getVaccineOptions();
 
   useEffect(() => {
     if (id) {
@@ -66,7 +84,11 @@ export function BabyProfilePage() {
       setBaby(babyData);
       setVaccines(vaccinesData);
     } catch (error) {
-      toast.error("Failed to load baby profile");
+      if (axios.isAxiosError(error) && !error.response) {
+        toast.error("Cannot connect to server");
+      } else {
+        toast.error("Failed to load baby profile");
+      }
       navigate("/babies");
     } finally {
       setIsLoading(false);
@@ -90,18 +112,60 @@ export function BabyProfilePage() {
       });
       loadData(parseInt(id));
     } catch (error) {
-      toast.error("Failed to record vaccine");
+      if (axios.isAxiosError(error) && !error.response) {
+        toast.error("Cannot connect to server");
+      } else {
+        toast.error("Failed to record vaccine");
+      }
+    }
+  };
+
+  const handleEditClick = (vaccine: VaccineRecord) => {
+    setEditingVaccine(vaccine);
+    setEditForm({
+      vaccineName: vaccine.vaccineName,
+      dateGiven: vaccine.dateGiven,
+      nextDueDate: vaccine.nextDueDate || "",
+      batchNumber: vaccine.batchNumber || "",
+      notes: vaccine.notes || "",
+      administeredBy: vaccine.administeredBy || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingVaccine) return;
+    try {
+      await vaccineService.update(editingVaccine.id, editForm);
+      toast.success("Vaccine updated successfully");
+      setIsEditDialogOpen(false);
+      setEditingVaccine(null);
+      if (id) loadData(parseInt(id));
+    } catch (error) {
+      if (axios.isAxiosError(error) && !error.response) {
+        toast.error("Cannot connect to server");
+      } else {
+        toast.error("Failed to update vaccine");
+      }
     }
   };
 
   const handleDeleteVaccine = async (vaccineId: number) => {
     if (!confirm("Are you sure you want to delete this vaccine record?")) return;
+    setIsDeleteLoading(vaccineId);
     try {
       await vaccineService.delete(vaccineId);
       toast.success("Vaccine record deleted");
       if (id) loadData(parseInt(id));
     } catch (error) {
-      toast.error("Failed to delete vaccine record");
+      if (axios.isAxiosError(error) && !error.response) {
+        toast.error("Cannot connect to server");
+      } else {
+        toast.error("Failed to delete vaccine record");
+      }
+    } finally {
+      setIsDeleteLoading(null);
     }
   };
 
@@ -209,22 +273,29 @@ export function BabyProfilePage() {
                 Record Vaccine
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Record New Vaccine</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleVaccineSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="vaccineName">Vaccine Name *</Label>
-                  <Input
-                    id="vaccineName"
-                    placeholder="e.g., BCG, Polio, Measles"
+                  <Label>Vaccine Type *</Label>
+                  <Select
                     value={vaccineForm.vaccineName}
-                    onChange={(e) =>
-                      setVaccineForm({ ...vaccineForm, vaccineName: e.target.value })
-                    }
+                    onValueChange={(value) => setVaccineForm({ ...vaccineForm, vaccineName: value })}
                     required
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select vaccine type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {vaccineOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dateGiven">Date Given *</Label>
@@ -324,14 +395,24 @@ export function BabyProfilePage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive"
-                        onClick={() => handleDeleteVaccine(vaccine.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditClick(vaccine)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          onClick={() => handleDeleteVaccine(vaccine.id)}
+                          disabled={isDeleteLoading === vaccine.id}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -340,6 +421,84 @@ export function BabyProfilePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Vaccine Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Vaccine Record</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Vaccine Type *</Label>
+              <Select
+                value={editForm.vaccineName}
+                onValueChange={(value) => setEditForm({ ...editForm, vaccineName: value })}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select vaccine type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vaccineOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editDateGiven">Date Given *</Label>
+              <Input
+                id="editDateGiven"
+                type="date"
+                value={editForm.dateGiven}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, dateGiven: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editNextDueDate">Next Due Date</Label>
+              <Input
+                id="editNextDueDate"
+                type="date"
+                value={editForm.nextDueDate || ""}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, nextDueDate: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editAdministeredBy">Administered By</Label>
+              <Input
+                id="editAdministeredBy"
+                placeholder="Nurse/Doctor name"
+                value={editForm.administeredBy || ""}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, administeredBy: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editNotes">Notes</Label>
+              <Input
+                id="editNotes"
+                placeholder="Additional notes"
+                value={editForm.notes || ""}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, notes: e.target.value })
+                }
+              />
+            </div>
+            <Button type="submit" className="w-full">
+              Update Vaccine
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

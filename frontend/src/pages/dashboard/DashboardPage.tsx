@@ -3,23 +3,31 @@ import { Link } from "react-router-dom";
 import { dashboardService } from "@/services/dashboardService";
 import type { DashboardStats } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Baby, Syringe, Calendar, AlertCircle } from "lucide-react";
+import { Baby, Syringe, Calendar, AlertCircle, WifiOff, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 
 export function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadStats();
   }, []);
 
   const loadStats = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const data = await dashboardService.getStats();
       setStats(data);
-    } catch (error) {
-      console.error("Failed to load stats:", error);
+    } catch (err) {
+      if (axios.isAxiosError(err) && !err.response) {
+        setError("server");
+      } else {
+        setError("unknown");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -28,7 +36,39 @@ export function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error === "server") {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">Overview of your vaccination system</p>
+          </div>
+        </div>
+
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <WifiOff className="h-16 w-16 text-destructive mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Cannot Connect to Server</h2>
+            <p className="text-muted-foreground mb-6 max-w-md">
+              Unable to connect to the backend server. Please ensure the server is running on port 8080.
+            </p>
+            <div className="flex gap-4">
+              <Button onClick={loadStats} className="gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Retry Connection
+              </Button>
+              <Link to="/">
+                <Button variant="outline">Go to Home</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
