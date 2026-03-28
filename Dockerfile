@@ -2,8 +2,13 @@
 FROM eclipse-temurin:21-jdk-alpine AS backend-build
 WORKDIR /app
 RUN apk add --no-cache maven
-COPY backend/pom.xml backend/src backend/mvnw backend/.mvn .mvn ./
-RUN chmod +x mvnw && mvn clean package -DskipTests
+
+# Copy backend files directly
+COPY backend/pom.xml ./
+COPY backend/src ./src
+COPY backend/mvnw ./
+
+RUN chmod +x mvnw && ./mvnw clean package -DskipTests
 
 # Build Frontend
 FROM node:18-alpine AS frontend-build
@@ -13,7 +18,6 @@ COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install
 COPY frontend/ .
 
-# Build with relative API URL for single-server deployment
 ENV VITE_API_URL=/api
 RUN pnpm build
 
@@ -21,16 +25,11 @@ RUN pnpm build
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Install nginx
 RUN apk add --no-cache nginx
 
-# Copy backend
 COPY --from=backend-build /app/target/*.jar app.jar
-
-# Copy frontend build
 COPY --from=frontend-build /app/dist ./dist
 
-# Setup nginx config for SPA + API proxy
 RUN mkdir -p /app/data /app/logs /etc/nginx/conf.d
 
 RUN echo 'server { \
@@ -49,9 +48,7 @@ RUN echo 'server { \
 
 ENV SERVER_PORT=8080 \
     JWT_SECRET=vmis-secret-key-change-this-in-production \
-    JWT_EXPIRATION=86400000 \
-    JWT_ISSUER=vmis-app \
-    JWT_AUDIENCE=vmis-client
+    JWT_EXPIRATION=86400000
 
 EXPOSE 80
 
