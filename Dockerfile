@@ -3,12 +3,11 @@ FROM eclipse-temurin:21-jdk-alpine AS backend-build
 WORKDIR /app
 RUN apk add --no-cache maven
 
-# Copy backend files directly
-COPY backend/pom.xml ./
-COPY backend/src ./src
-COPY backend/mvnw ./
+COPY backend/pom.xml .
+RUN mvn dependency:go-offline -B
 
-RUN chmod +x mvnw && ./mvnw clean package -DskipTests
+COPY backend/src ./src
+RUN mvn package -DskipTests
 
 # Build Frontend
 FROM node:18-alpine AS frontend-build
