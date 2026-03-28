@@ -1,0 +1,31 @@
+services:
+  backend:
+    type: backend
+    build:
+      dockerfile: backend/Dockerfile
+    env:
+      - SERVER_PORT=8080
+      - JWT_SECRET=vmis-secret-key-change-this-in-production-minimum-32-chars
+      - JWT_EXPIRATION=86400000
+      - JWT_ISSUER=vmis-app
+      - JWT_AUDIENCE=vmis-client
+    autoDeploy: true
+    healthCheck:
+      path: /api/health
+      method: GET
+    ports:
+      - 8080:8080
+
+  frontend:
+    type: frontend
+    build:
+      dockerfile: frontend/Dockerfile
+      args:
+        - VITE_API_URL=$API_URL
+    env:
+      - VITE_API_URL=$API_URL
+    autoDeploy: true
+    ports:
+      - 80:80
+    routes:
+      - / -> /index.html

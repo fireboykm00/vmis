@@ -5,29 +5,20 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: vmis-backend
     ports:
       - "8080:8080"
     environment:
       - SERVER_PORT=8080
-      - DB_PATH=./data/vmis.db
-      - JWT_SECRET=vmis-secret-key-change-this-in-production-minimum-32-chars
-      - JWT_EXPIRATION=86400000
+      - JWT_SECRET=${JWT_SECRET:-vmis-secret-key-change-this-in-production-minimum-32-chars}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
       - JWT_ISSUER=vmis-app
       - JWT_AUDIENCE=vmis-client
-      - FRONTEND_URL=http://localhost:5173
       - HIBERNATE_DDL_AUTO=update
-      - HIBERNATE_SHOW_SQL=false
-    volumes:
-      - backend-data:/app/data
-      - backend-logs:/app/logs
-    networks:
-      - vmis-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
       interval: 30s
-      timeout: 3s
+      timeout: 10s
       retries: 3
       start_period: 60s
 
@@ -36,22 +27,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:8080/api
-    container_name: vmis-frontend
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8080/api}
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
-    networks:
-      - vmis-network
     restart: unless-stopped
-
-volumes:
-  backend-data:
-    driver: local
-  backend-logs:
-    driver: local
-
-networks:
-  vmis-network:
-    driver: bridge
