@@ -1,7 +1,14 @@
-# Build all in one go using builder stage
+# Build both backend and frontend using builder
 FROM maven:3.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
+
+# Install Node.js in the maven image
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g pnpm && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Build Backend
 COPY backend/pom.xml ./backend/
@@ -12,15 +19,15 @@ RUN mvn package -DskipTests
 
 WORKDIR /app
 
-# Build Frontend - copy package files first for caching
+# Build Frontend
 COPY frontend/package.json frontend/pnpm-lock.yaml ./frontend/
 WORKDIR /app/frontend
-RUN npm install -g pnpm && pnpm install
+RUN pnpm install
 COPY frontend/ .
 ENV VITE_API_URL=/api
 RUN pnpm build
 
-# Runtime image - minimal
+# Final minimal runtime image
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
