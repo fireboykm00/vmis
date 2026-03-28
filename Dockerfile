@@ -1,53 +1,50 @@
-# Build Backend
-FROM eclipse-temurin:21-jdk-alpine AS backend-build
+# Build both backend and frontend
+FROM maven:3.9-eclipse-temurin-21 AS builder
+
 WORKDIR /app
-RUN apk add --no-cache maven
 
-COPY backend/pom.xml .
+# Build Backend
+COPY backend/pom.xml ./backend/
+WORKDIR /app/backend
 RUN mvn dependency:go-offline -B
-
 COPY backend/src ./src
 RUN mvn package -DskipTests
 
-# Build Frontend
-FROM node:18-alpine AS frontend-build
 WORKDIR /app
-RUN npm install -g pnpm
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
-RUN pnpm install
-COPY frontend/ .
 
+# Build Frontend
+FROM node:18-alpine AS frontend
+WORKDIR /app
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install
+COPY frontend/ .
 ENV VITE_API_URL=/api
 RUN pnpm build
 
-# Final Image
+# Copy frontend build to builder for combine
+COPY --from=frontend /app/dist /app/dist
+
+# Runtime image - minimal
 FROM eclipse-temurin:21-jre-alpine
+
 WORKDIR /app
 
 RUN apk add --no-cache nginx
 
-COPY --from=backend-build /app/target/*.jar app.jar
-COPY --from=frontend-build /app/dist ./dist
+COPY --from=builder /app/backend/target/*.jar app.jar
+COPY --from=builder /app/dist ./dist
 
-RUN mkdir -p /app/data /app/logs /etc/nginx/conf.d
+RUN mkdir -p /app/data
 
 RUN echo 'server { \
     listen 80; \
     root /app/dist; \
     index index.html; \
-    location /api/ { \
-        proxy_pass http://localhost:8080; \
-        proxy_set_header Host $host; \
-        proxy_set_header X-Real-IP $remote_addr; \
-    } \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+    location /api/ { proxy_pass http://localhost:8080; } \
+    location / { try_files $uri $uri/ /index.html; } \
+}' > /etc/nginx/http.d/default.conf
 
-ENV SERVER_PORT=8080 \
-    JWT_SECRET=vmis-secret-key-change-this-in-production \
-    JWT_EXPIRATION=86400000
+ENV SERVER_PORT=8080 JWT_SECRET=vmis-secret-key-change-this
 
 EXPOSE 80
 
